@@ -29,6 +29,9 @@ let callCharge customer call =
   |> duration
   |> charge (customer.Plan)
 
+let callCharges customer calls =
+  calls
+  |> List.map (callCharge customer)
 
 let aSampleCall = {
   StartedAt = DateTimeOffset.Now
@@ -52,3 +55,4 @@ let aListOfCalls =
 
 duration aSampleCall
 callCharge customer aSampleCall
+callCharges customer aListOfCalls
