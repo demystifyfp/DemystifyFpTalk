@@ -33,14 +33,23 @@ let callCharges customer calls =
   calls
   |> List.map (callCharge customer)
 
+
+
 let aSampleCall = {
   StartedAt = DateTimeOffset.Now
   CompletedAt = DateTimeOffset.Now.AddSeconds(10.)
 }
 
+let getCustomer id = 
+  if id = 1 then
+    Ok {Plan = 0.75m<paisa/second>}
+  else
+    Error "No DB Connection available"
 let customer = {
   Plan = 0.5m<paisa/second>
 }
+
+int -> Result<Customer, string>
 
 let aListOfCalls = 
   [{
