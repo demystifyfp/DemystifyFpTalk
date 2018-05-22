@@ -45,11 +45,19 @@ let getCustomer id =
     Ok {Plan = 0.75m<paisa/second>}
   else
     Error "No DB Connection available"
+
+let getCustomerPlan id =
+  
+  let customerPlan (c : Customer) =
+    sprintf "%.2f paisa per second" c.Plan
+  
+  getCustomer id
+  |> Result.map customerPlan
+
 let customer = {
   Plan = 0.5m<paisa/second>
 }
 
-int -> Result<Customer, string>
 
 let aListOfCalls = 
   [{
@@ -65,3 +73,4 @@ let aListOfCalls =
 duration aSampleCall
 callCharge customer aSampleCall
 callCharges customer aListOfCalls
+
