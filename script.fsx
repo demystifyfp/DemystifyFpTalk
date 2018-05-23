@@ -1,3 +1,5 @@
+#load "Result.fsx"
+
 open System
 
 type Call = {
@@ -13,7 +15,12 @@ type paisa
 
 type Customer = {
   Plan : decimal<paisa/second>
+  SimNumber : string
 }
+
+type SimStatus =
+  | Active
+  | InActive of DateTimeOffset
 
 let duration call =
   let ts =
@@ -27,7 +34,7 @@ let charge (plan : decimal<paisa/second>) (callDuration : decimal<second>) =
 let callCharge customer call =
   call
   |> duration
-  |> charge (customer.Plan)
+  |> charge customer.Plan
 
 let callCharges customer calls =
   calls
@@ -42,7 +49,7 @@ let aSampleCall = {
 
 let getCustomer id = 
   if id = 1 then
-    Ok {Plan = 0.75m<paisa/second>}
+    Ok {SimNumber = "S345"; Plan = 0.75m<paisa/second>}
   else
     Error "No DB Connection available"
 
@@ -54,7 +61,23 @@ let getCustomerPlan id =
   getCustomer id
   |> Result.map customerPlan
 
+
+let getCustomerSimStatus customer =
+  match customer.SimNumber with
+  | "S123" -> Ok Active
+  | "S345" -> Ok (InActive (DateTimeOffset.Parse "20/05/2018 11:05AM"))
+  | _ -> Error "Db Down!"
+
+let getCustomerSimStatusById id =
+  getCustomer id
+  |> Result.bind getCustomerSimStatus
+  |> Result.map (function
+    | Active -> sprintf "Active"
+    | InActive dateTime -> sprintf "InActive (%s)" (dateTime.ToString("MMM dd, yyyy"))
+  )
+
 let customer = {
+  SimNumber = "S123"
   Plan = 0.5m<paisa/second>
 }
 
@@ -69,6 +92,13 @@ let aListOfCalls =
    {
     StartedAt = DateTimeOffset.Parse "20/05/2018 01:01:10PM"
     CompletedAt = DateTimeOffset.Parse "20/05/2018 01:01:25PM"}]
+
+
+let getCustomerCalls id = 
+  if id = 1 then
+    Ok aListOfCalls
+  else  
+    Error "db down!"
 
 duration aSampleCall
 callCharge customer aSampleCall
