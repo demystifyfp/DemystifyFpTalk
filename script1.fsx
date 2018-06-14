@@ -122,3 +122,16 @@ type Configuration = {
   Id : int
   ElementId : int
 }
+
+// int -> Result<Configuration, string>
+let getConfigurationById id =
+  if id = 1 then
+    Ok {Id = 1; ElementId = 1}
+  else
+    Error "unable to fetch"
+
+let getElementByConfigId cId =
+  getConfigurationById cId
+  |> Result.bind (fun c ->
+      getElementById c.ElementId
+    )
