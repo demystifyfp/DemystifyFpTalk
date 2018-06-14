@@ -1,10 +1,10 @@
 #load "Result.fsx"
-
 open System
+
 
 type Call = {
   StartedAt : DateTimeOffset
-  CompletedAt : DateTimeOffset
+  CompletedAt: DateTimeOffset
 }
 
 [<Measure>]
@@ -15,72 +15,46 @@ type paisa
 
 type Customer = {
   Plan : decimal<paisa/second>
-  SimNumber : string
 }
 
 type SimStatus =
-  | Active
-  | InActive of DateTimeOffset
+| Active
+| InActive of deactivatedAt:DateTimeOffset
 
-let duration call =
-  let ts =
-    call.CompletedAt - call.StartedAt
-  decimal (ts.TotalSeconds) * 1m<second>
-  
+let duration (call : Call) =
+  let ts = call.CompletedAt - call.StartedAt
+  decimal(ts.TotalDays) * 1m<second>
 
 let charge (plan : decimal<paisa/second>) (callDuration : decimal<second>) =
   callDuration * plan
 
-let callCharge customer call =
+let callCharge (customer : Customer) call =
+  let chargedBasedPlan = charge customer.Plan
   call
   |> duration
-  |> charge customer.Plan
+  |> chargedBasedPlan
 
-let callCharges customer calls =
+
+let callCharges (customer : Customer) calls =
   calls
   |> List.map (callCharge customer)
 
+let customer = { Plan  = 0.75m<paisa/second>}
 
-
-let aSampleCall = {
-  StartedAt = DateTimeOffset.Now
-  CompletedAt = DateTimeOffset.Now.AddSeconds(10.)
-}
-
-let getCustomer id = 
+let getCustomer id =
   if id = 1 then
-    Ok {SimNumber = "S345"; Plan = 0.75m<paisa/second>}
+    Ok customer 
   else
-    Error "No DB Connection available"
+    Error "Db down!"
+
+
+let formatterPlan (customer : Customer) =
+  sprintf "%A paisa per second" customer.Plan
+
 
 let getCustomerPlan id =
-  
-  let customerPlan (c : Customer) =
-    sprintf "%.2f paisa per second" c.Plan
-  
   getCustomer id
-  |> Result.map customerPlan
-
-
-let getCustomerSimStatus customer =
-  match customer.SimNumber with
-  | "S123" -> Ok Active
-  | "S345" -> Ok (InActive (DateTimeOffset.Parse "20/05/2018 11:05AM"))
-  | _ -> Error "Db Down!"
-
-let getCustomerSimStatusById id =
-  getCustomer id
-  |> Result.bind getCustomerSimStatus
-  |> Result.map (function
-    | Active -> sprintf "Active"
-    | InActive dateTime -> sprintf "InActive (%s)" (dateTime.ToString("MMM dd, yyyy"))
-  )
-
-let customer = {
-  SimNumber = "S123"
-  Plan = 0.5m<paisa/second>
-}
-
+  |> Result.map formatterPlan
 
 let aListOfCalls = 
   [{
@@ -93,14 +67,19 @@ let aListOfCalls =
     StartedAt = DateTimeOffset.Parse "20/05/2018 01:01:10PM"
     CompletedAt = DateTimeOffset.Parse "20/05/2018 01:01:25PM"}]
 
-
-let getCustomerCalls id = 
+let getCustomerCalls id =
   if id = 1 then
     Ok aListOfCalls
-  else  
+  else
     Error "db down!"
 
-duration aSampleCall
-callCharge customer aSampleCall
-callCharges customer aListOfCalls
+let getCustomerCallsCharges id =
+  let customer = getCustomer id
+  let calls = getCustomerCalls id
+  Result.lift2 callCharges customer calls
+
+let getCustomerSimStatus (customer : Customer) =
+  // 
+
+
 

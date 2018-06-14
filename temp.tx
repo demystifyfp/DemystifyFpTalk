@@ -1,5 +1,0 @@
-> namePrompt();;
-What's Your name?
-Tamizhvendan
-[<Struct>]
-val it : Result<string,PromptError> = Ok "Tamizhvendan"
